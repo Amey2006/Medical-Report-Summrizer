@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "BabyScan AI",
+    "slug": "baby-scan-ai",
+    "scheme": "babyscanai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF5F7"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.babyscan.ai",
+      "infoPlist": {
+        "NSCameraUsageDescription": "BabyScan AI uses the camera to capture baby scans, X-rays, and hospital document photos for analysis.",
+        "NSPhotoLibraryUsageDescription": "BabyScan AI accesses your photo library to select baby scans, X-rays, and hospital document photos.",
+        "NSPhotoLibraryAddUsageDescription": "BabyScan AI can save analysis results to your photo library."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFF5F7"
+      },
+      "package": "com.babyscan.ai"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "BabyScan AI accesses your photos to analyze baby scans, X-rays, and hospital document photos.",
+          "cameraPermission": "BabyScan AI uses the camera to capture baby scans, X-rays, and hospital document photos.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "apiBaseUrl": "http://YOUR_BACKEND_IP:3000"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+// ============================================================
+// FIREBASE STORAGE SECURITY RULES
+// Save this as storage.rules in your Firebase project
+// Deploy with: firebase deploy --only storage
+// ============================================================
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Scan images: allow read for anyone, write from backend only
+    match /scans/{userId}/{fileName} {
+      allow read: if true;
+      // Backend uses Admin SDK which bypasses these rules for writes
+      allow write: if false; // Backend admin SDK bypasses this
+    }
+  }
+}

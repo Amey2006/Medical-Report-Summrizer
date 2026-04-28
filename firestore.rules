@@ -1,0 +1,23 @@
+// ============================================================
+// FIREBASE FIRESTORE SECURITY RULES
+// Save this as firestore.rules in your Firebase project
+// Deploy with: firebase deploy --only firestore:rules
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Scans collection
+    match /scans/{scanId} {
+      // Development: Allow all reads/writes
+      // For production, change to: if request.auth != null;
+      allow read, write: if true;
+      
+      // Prevent overwriting other users' data
+      // allow read: if resource.data.userId == request.resource.data.userId;
+      // allow write: if request.resource.data.userId is string 
+      //               && request.resource.data.userId.size() > 0;
+    }
+  }
+}
