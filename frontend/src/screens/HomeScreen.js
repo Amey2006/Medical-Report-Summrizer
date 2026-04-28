@@ -258,8 +258,8 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          <View style={styles.decorCircle1} />
-          <View style={styles.decorCircle2} />
+          <View pointerEvents="none" style={styles.decorCircle1} />
+          <View pointerEvents="none" style={styles.decorCircle2} />
         </Animated.View>
       </LinearGradient>
 
@@ -388,6 +388,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     gap: SIZES.md,
+    zIndex: 1,
+    elevation: 1,
   },
   headerTextWrap: {
     flex: 1,

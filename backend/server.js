@@ -246,27 +246,82 @@ async function generateGroqResponse(prompt, imageBase64, mimeType) {
   throw lastError;
 }
 
-const INPUT_SCOPE_PROMPT = `The uploaded file may be:
-- an ultrasound image
-- an X-ray image
-- a photo of a hospital report, discharge summary, prescription, growth chart, or other baby-development related medical document
+const INPUT_SCOPE_PROMPT = `You are analyzing one uploaded medical image or medical document.
 
-First identify what kind of medical image or document was uploaded.
+Step 1: classify the upload as exactly one of these:
+- fetal or prenatal ultrasound
+- general X-ray
+- hospital report or clinical document
+- unclear, unrelated, or unsupported image
 
-If it is a hospital document:
-- read and summarize the important baby-development or clinical information visible in the document
-- explain important findings in simple, caring language
-- mention if some text is unclear or unreadable
+Do not assume the image is baby-related. Only mention baby, fetus, placenta, pregnancy, gestational age, or fetal development if the upload clearly shows a fetal ultrasound or a pregnancy-related document.
 
-If it is an ultrasound or X-ray:
-- describe only what can be reasonably observed from the image
-- avoid pretending to see details that are not visible
+If the upload is a general X-ray:
+- identify the likely body part and, if possible, the view
+- focus on direct visual observations only
+- specifically look for:
+  - fracture line
+  - cortical break or cortical discontinuity
+  - crack in bone
+  - displacement or translation of fracture fragments
+  - angulation
+  - step-off in bone alignment
+  - dislocation or subluxation
+  - joint alignment
+  - soft-tissue swelling
+  - degenerative change or other visible abnormality
+- compare the visible structure with expected normal alignment in simple but medically accurate words
+- if a finding is not certain, use phrases like "possible", "may represent", or "suspicious for"
+- if no obvious fracture or dislocation is visible, say that clearly and mention that photo quality and single-view limitation can hide injury
+- do not give treatment advice
 
-If the content is unrelated, unclear, or too blurry:
+If the upload is a fetal or prenatal ultrasound:
+- describe only pregnancy-related structures that are reasonably visible
+- only in this case may you mention baby or fetal observations
+- do not invent measurements or findings that are not visible
+
+If the upload is a hospital report or clinical document:
+- extract the important visible text
+- summarize findings, measurements, diagnoses, medicines, and follow-up advice
+- mention unclear or unreadable text
+
+If the upload is unclear, unrelated, or too blurry:
 - say that clearly
-- explain what kind of clearer image or document would help
+- explain what clearer image would help
 
-Always avoid diagnosis claims, and always remind the user to confirm all findings with a qualified doctor or hospital team.`;
+For every response:
+- describe only what is reasonably visible
+- do not pretend to see details that are not visible
+- avoid definitive diagnosis language
+- include a short educational note when useful, especially for medical students
+- remind the user that important findings must be confirmed by a doctor or radiologist.`;
+
+const ENGLISH_IMAGE_ANALYSIS_PROMPT = `Analyze the upload carefully and respond in English using exactly these section headers:
+
+IMAGE TYPE:
+[State whether this is a fetal ultrasound, a general X-ray with the likely body part, a medical document, or an unclear image.]
+
+OBSERVATIONS:
+[Describe only visible findings. For X-rays, be specific about fracture line, cortical break, crack, displacement, angulation, step-off, alignment, joint position, and soft-tissue swelling when visible. If there is no obvious acute fracture or dislocation, say that clearly.]
+
+WHAT SEEMS ABNORMAL OR DIFFERENT FROM NORMAL:
+[Explain how the visible structure differs from expected normal anatomy. If nothing clearly abnormal is seen, say that no obvious abnormality is visible in this image.]
+
+MEDICAL MEANING:
+[Briefly explain what the observed finding may mean in simple but medically useful language. Use cautious wording when uncertain.]
+
+STUDY NOTE:
+[Give 1 to 3 short educational points for a medical student, such as anatomy, fracture terminology, alignment terms, or radiology interpretation tips relevant to this image.]
+
+LIMITS AND REMINDER:
+[Mention image-quality, angle, cropping, or single-view limitations. Remind the user that this is AI-assisted observation and not a final diagnosis.]
+
+Rules:
+- If the image is a normal hand, leg, chest, spine, or other general X-ray, do not mention baby, fetus, placenta, pregnancy, or fetal development
+- Mention baby-related information only if the image is clearly a fetal or prenatal ultrasound
+- Stay observation-first and image-specific
+- Do not invent findings
+- Keep the wording concise, specific, and medically helpful`;
 
 // ── Language Prompts ───────────────────────────────────────
 const LANGUAGE_CONFIG = {
@@ -406,7 +461,10 @@ app.post("/api/analyze", upload.single("image"), async (req, res) => {
       `📸 Analyzing scan for userId=${userId}, language=${language}, size=${req.file.size} bytes`
     );
 
-    const { prompt } = LANGUAGE_CONFIG[language];
+    const prompt =
+      language === "english"
+        ? ENGLISH_IMAGE_ANALYSIS_PROMPT
+        : LANGUAGE_CONFIG[language].prompt;
     const finalPrompt = `${INPUT_SCOPE_PROMPT}\n\n${prompt}`;
     const imageBase64 = req.file.buffer.toString("base64");
     const mimeType = req.file.mimetype;
